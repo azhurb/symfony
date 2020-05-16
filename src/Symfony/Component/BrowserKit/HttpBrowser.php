@@ -39,10 +39,14 @@ class HttpBrowser extends AbstractBrowser
         parent::__construct([], $history, $cookieJar);
     }
 
+    /**
+     * @param Request $request
+     * @return Response
+     */
     protected function doRequest($request): Response
     {
         $headers = $this->getHeaders($request);
-        [$body, $extraHeaders] = $this->getBodyAndExtraHeaders($request);
+        [$body, $extraHeaders] = $this->getBodyAndExtraHeaders($request, $headers);
 
         $response = $this->client->request($request->getMethod(), $request->getUri(), [
             'headers' => array_merge($headers, $extraHeaders),
@@ -54,9 +58,11 @@ class HttpBrowser extends AbstractBrowser
     }
 
     /**
+     * @param Request $request
+     * @param array $headers
      * @return array [$body, $headers]
      */
-    private function getBodyAndExtraHeaders(Request $request): array
+    private function getBodyAndExtraHeaders(Request $request, array $headers): array
     {
         if (\in_array($request->getMethod(), ['GET', 'HEAD'])) {
             return ['', []];
@@ -67,6 +73,12 @@ class HttpBrowser extends AbstractBrowser
         }
 
         if (null !== $content = $request->getContent()) {
+
+            if (!empty($headers['Content-Type'])) {
+
+                return [$content, []];
+            }
+
             $part = new TextPart($content, 'utf-8', 'plain', '8bit');
 
             return [$part->bodyToString(), $part->getPreparedHeaders()->toArray()];
@@ -97,7 +109,7 @@ class HttpBrowser extends AbstractBrowser
                 $headers[substr($key, 5)] = $value;
             } elseif (isset($contentHeaders[$key])) {
                 // CONTENT_* are not prefixed with HTTP_
-                $headers[$key] = $value;
+                $headers[ucwords($key, '-')] = $value;
             }
         }
         $cookies = [];

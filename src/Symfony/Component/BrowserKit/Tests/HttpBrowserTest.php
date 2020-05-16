@@ -59,6 +59,10 @@ class HttpBrowserTest extends AbstractBrowserTest
             ['POST', 'http://example.com/', [], [], [], 'content'],
             ['POST', 'http://example.com/', ['headers' => $defaultHeaders + ['Content-Type: text/plain; charset=utf-8', 'Content-Transfer-Encoding: 8bit'], 'body' => 'content', 'max_redirects' => 0]],
         ];
+        yield 'POST JSON' => [
+            ['POST', 'http://example.com/', [], [], ['Content-Type' => 'application/json'], '["content"]'],
+            ['POST', 'http://example.com/', ['headers' => $defaultHeaders + ['Content-Type' => 'application/json'], 'body' => '["content"]', 'max_redirects' => 0]],
+        ];
     }
 
     public function testMultiPartRequestWithSingleFile()
